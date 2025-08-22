@@ -1,0 +1,5 @@
+[
+  { "name": "Demo Phone A", "data": { "brand": "Demo", "price": 111.11, "inStock": true } },
+  { "name": "Demo Phone B", "data": { "brand": "Demo", "price": 222.22, "colors": ["black","silver"] } },
+  { "name": "Demo Watch", "data": { "brand": "Demo", "year": 2024 } }
+]

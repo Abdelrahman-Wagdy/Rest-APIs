@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
+<suite name="API Suite" verbose="1" parallel="false">
+    <listeners>
+        <listener class-name="listeners.AllureListener"/>
+    </listeners>
+    <test name="REST Tests">
+        <classes>
+            <class name="tests.GetApiTests"/>
+            <class name="tests.PostApiTests"/>
+            <class name="tests.DeleteApiTests"/>
+        </classes>
+    </test>
+</suite>
+
