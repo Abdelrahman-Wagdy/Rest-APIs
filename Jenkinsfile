@@ -31,6 +31,7 @@ pipeline {
     MVN = 'mvn -B -U'
     // filtered testng.xml ends up here after testResources phase
     SUITE_XML = 'target/test-classes/testng.xml'
+    TEST_RESOURCES = 'src/test/resources'
   }
 
   stages {
@@ -77,8 +78,9 @@ pipeline {
     always {
       // Publish Allure (requires Allure Jenkins plugin)
       always {
-              allure includeProperties: false, jdk: '', results: [[path: 'target/allure-results']]
-            }
+            allure includeProperties: false, results: [[path: 'target/allure-results']]
+            archiveArtifacts artifacts: 'target/surefire-reports/**/*, target/allure-results/**/*', allowEmptyArchive: true
+          }
 
       // Archive useful artifacts
       sh 'zip -qr allure-results.zip target/allure-results || true'
