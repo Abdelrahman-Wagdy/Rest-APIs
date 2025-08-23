@@ -1,5 +1,9 @@
 pipeline {
   agent any
+  tools{
+    maven 'Maven 3.9.11'
+    jdk 'temurin-24'
+  }
   options {
     timestamps()
     ansiColor('xterm')
@@ -72,7 +76,9 @@ pipeline {
   post {
     always {
       // Publish Allure (requires Allure Jenkins plugin)
-      allure includeProperties: false, results: [[path: 'target/allure-results']]
+      always {
+              allure includeProperties: false, jdk: '', results: [[path: 'target/allure-results']]
+            }
 
       // Archive useful artifacts
       sh 'zip -qr allure-results.zip target/allure-results || true'
