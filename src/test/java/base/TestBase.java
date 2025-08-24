@@ -15,7 +15,7 @@ public abstract class TestBase {
     protected String objectsPath;
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     public void setupSuite() {
         this.client = new RestClient();
         this.objectsPath = ConfigManager.objectsPath();

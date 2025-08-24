@@ -23,7 +23,7 @@ public class PostApiTests extends TestBase {
 
 
     @Test(dataProvider = "createObjects", dataProviderClass = ObjectDataProvider.class,
-            description = "TC05/06/07 – POST creates objects from JSON data")
+            description = "TC05/06/07 – POST creates objects from JSON data", groups = {"smoke"})
     @Severity(SeverityLevel.BLOCKER)
     public void createObject(ObjectPayload payload) {
         Response r = client.post(objectsPath, payload);
@@ -42,8 +42,7 @@ public class PostApiTests extends TestBase {
     }
 
 
-    @Test(dependsOnMethods = "createObject", description = "TC08 – GET each created id returns the same name",
-    groups = {"smoke"})
+    @Test(dependsOnMethods = "createObject", description = "TC08 – GET each created id returns the same name")
     public void verifyCreatedObjectsViaGet() {
         for (String id : createdIds) {
             Response r = client.get(objectsPath, id);
