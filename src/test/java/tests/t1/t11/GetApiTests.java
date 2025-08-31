@@ -1,8 +1,11 @@
-package tests;
+package tests.t1.t11;
 
 
 import base.TestBase;
-import io.qameta.allure.*;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -13,7 +16,7 @@ import org.testng.annotations.Test;
 public class GetApiTests extends TestBase {
 
 
-    @Test(description = "TC01 – GET all objects returns 200 and non-empty array", groups = {"smoke"})
+    @Test(description = "TC01 – GET all objects returns 200 and non-empty array", groups = {"smoke", "t11"})
     @Severity(SeverityLevel.CRITICAL)
     public void getAllObjects() {
         Response r = client.get(objectsPath);
@@ -22,7 +25,7 @@ public class GetApiTests extends TestBase {
     }
 
 
-    @Test(description = "TC02 – GET single known object by id=1 contains name", groups = {"smoke"})
+    @Test(description = "TC02 – GET single known object by id=1 contains name", groups = {"smoke", "t11"})
     public void getSingleObject() {
         Response r = client.get(objectsPath, "1");
         assertStatus(r, 200);
