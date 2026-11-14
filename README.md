@@ -1,96 +1,78 @@
-# Jenkins Pipeline Test Project
+# REST API Test Automation
 
-This project contains API tests using TestNG, Rest Assured, and Allure reporting.
+A Java 24, REST Assured, TestNG, and Allure demonstration against the Objects API. The repository illustrates JSON-driven test data, a reusable HTTP client, package selection, and Jenkins execution.
 
-## Running Tests
+## Requirements and setup
 
-### Using Dynamic Package Selection (Recommended)
+- JDK 24 and Maven 3.9 recommended; the project compiles with release 24.
+- Network access to the configured API and Maven dependencies.
+- Allure CLI for local report viewing.
 
-The project uses a single `testng.xml` file with dynamic package selection. You can specify which package of tests to run using the `packageToRun` parameter.
-
-**Default (runs all tests):**
 ```bash
-mvn test
+git clone https://github.com/Abdelrahman-Wagdy/Rest-APIs.git
+cd Rest-APIs
+mvn clean test
 ```
 
-**Run tests from specific package:**
+Review `src/test/resources/config/endpoints.properties` before running. Tests create and delete demo objects. Public API availability and request quotas can affect results; inspect the response body instead of assuming every error is a product defect.
+
+## Select tests
+
+The supported property is **testPackage**:
+
 ```bash
-# Run tests from t1 package (includes subpackages)
-mvn test -DpackageToRun="tests.t1.*"
-
-# Run tests from t2 package (includes subpackages)
-mvn test -DpackageToRun="tests.t2.*"
-
-# Run tests from t1.t11 subpackage only
-mvn test -DpackageToRun="tests.t1.t11.*"
-
-# Run all tests explicitly
-mvn test -DpackageToRun="tests.*"
+mvn clean test -DtestPackage="tests.*"
+mvn clean test -DtestPackage="tests.t1.*"
+mvn clean test -DtestPackage="tests.t1.t11.*"
+mvn clean test -DtestPackage="tests.t2.*"
+mvn clean test -DtestPackage="tests.t2.*" -Dgroups=smoke
 ```
 
-### Test Results Summary
+Without a group filter, grouped and ungrouped tests are eligible to run. With `-Dgroups=smoke`, TestNG applies group selection and dependency rules.
 
-- **Default**: Runs all tests (`tests.*`) - 36 tests
-- **t1 package**: Runs tests from `tests.t1.*` (includes t1.t11 subpackage) - 18 tests  
-- **t2 package**: Runs tests from `tests.t2.*` - 9 tests
-- **t1.t11 subpackage**: Runs tests from `tests.t1.t11.*` only - 6 tests
+Maven filters `${testPackage}` in `src/test/resources/testng.xml` into `target/test-classes/testng.xml`. Surefire then reads that generated suite. Do not run the unfiltered source XML directly expecting Maven substitution.
 
-## Project Structure
+There is no dynamic suite factory or custom runner in this repository. The similar classes in `tests`, `tests.t1`, `tests.t1.t11`, and `tests.t2` demonstrate package selection; they are not four different API feature sets. Exact invocation counts depend on selection and data-provider expansion.
 
-```
-src/test/java/
-├── base/
-│   ├── TestBase.java
-│   ├── DynamicSuiteFactory.java
-│   └── TestRunner.java
-├── dataproviders/
-│   └── ObjectDataProvider.java
-├── listeners/
-│   └── AllureListener.java
-└── tests/
-    ├── GetApiTests.java
-    ├── PostApiTests.java
-    ├── DeleteApiTests.java
-    ├── t1/
-    │   ├── GetApiTests.java
-    │   ├── PostApiTests.java
-    │   ├── DeleteApiTests.java
-    │   └── t11/
-    │       ├── GetApiTests.java
-    │       ├── PostApiTests.java
-    │       └── DeleteApiTests.java
-    └── t2/
-        ├── GetApiTests.java
-        ├── PostApiTests.java
-        └── DeleteApiTests.java
+## Code map
+
+| Location | Responsibility |
+| --- | --- |
+| `src/main/java/config/ConfigManager.java` | API configuration |
+| `src/main/java/http/RestClient.java` | HTTP request helpers |
+| `src/main/java/models/ObjectPayload.java` | Request model |
+| `src/main/java/utils/JsonUtils.java` | JSON utilities |
+| `src/test/java/base/TestBase.java` | Shared setup and status assertion |
+| `src/test/java/dataproviders/ObjectDataProvider.java` | JSON-backed input data |
+| `src/test/java/listeners/AllureListener.java` | TestNG reporting listener |
+| `src/test/java/tests/` | GET, POST, and DELETE test examples and package variants |
+| `src/test/resources/testdata/create_objects.json` | Input fixtures |
+
+## Reports
+
+```bash
+allure serve target/allure-results
 ```
 
-## Test Configuration
+Surefire reports are written to `target/surefire-reports`. Inspect both the assertion and API response when diagnosing failures. An Allure annotation alone is not proof that an attachment was recorded; verify generated report content.
 
-- **TestNG suite**: `src/test/resources/testng.xml` (single file with dynamic package selection)
-- **Dynamic runner**: `base.TestRunner` (handles package parameter)
-- **Suite factory**: `base.DynamicSuiteFactory` (creates TestNG suites dynamically)
-- **Test framework**: TestNG
-- **HTTP client**: Rest Assured
-- **Reporting**: Allure
-- **Java version**: 24
+## Jenkins
 
-## How It Works
+Configure a Pipeline from SCM using this repository's `Jenkinsfile` and select the branch in the job's SCM settings. The agent needs tools named `Maven 3.9.11` and `temurin-24`, plus the Allure plugin and a configured Allure installation. Email Extension and SMTP are needed only when email is enabled.
 
-1. The `testng.xml` file defines a parameter `packageToRun` with default value `tests.*`
-2. Maven passes the `-DpackageToRun` value as a system property
-3. The `TestRunner` class reads the system property and creates a dynamic TestNG suite
-4. The `DynamicSuiteFactory` creates the TestNG XML suite with the specified package
-5. TestNG executes only the tests from the specified package
+Parameters:
 
-## Troubleshooting
+- `FILES`: suite filenames under `src/test/resources`, comma-separated; blank uses `testng.xml`.
+- `PACKAGES`: package selector; blank uses `tests.*`.
+- `GROUPS`: optional group filter; blank leaves groups unfiltered.
+- `EMAIL_TO`: optional recipients; blank disables email.
 
-If no tests are running, check:
-1. That test classes are in the correct package structure
-2. That test methods are properly annotated with `@Test`
-3. Use `mvn test -X` for debug output to see what's happening
-4. Check that the package name in `packageToRun` parameter is correct
+Selected suites run in one Maven invocation so `clean` does not erase an earlier suite's reports. The pipeline uses the filtered XML files, archives reports even after test failure, and publishes Allure results when available. Test failures retain Maven's nonzero exit status.
 
-## Note
+## Next improvements
 
-The API being tested has a daily rate limit of 100 requests. If you see test failures with status 405 and rate limit messages, the API limit has been reached for the day.
+- Consolidate duplicated test classes once package-selection examples are no longer needed.
+- Clean up every object created by POST tests, including after assertion failures.
+- Replace permissive status assertions with checks tied to an agreed API contract.
+- Add schema checks and a controlled local API fixture for deterministic execution.
+- Add a documented asynchronous job example separately; this repository currently demonstrates synchronous HTTP requests.
